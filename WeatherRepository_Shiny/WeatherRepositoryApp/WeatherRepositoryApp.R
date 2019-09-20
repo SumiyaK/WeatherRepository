@@ -1,47 +1,55 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
+
+library(tidyverse)
+
+library(lubridate)
+
+simpleData <- read.csv(file = "C:/Github/WeatherRepository/WeatherRepository_Shiny/PFR089_MtAlbert_Daily_Short.csv")
+
+simpleData <- simpleData %>%
+    mutate(Date = dmy_hm(TIMESTAMP)) %>%
+    mutate(Date = as_date(Date)) %>%
+    select(Date, AirTemperature_Avg)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-
+    
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
+    titlePanel("Mt Albert Weather data - Temperature"),
+    
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+            dateRangeInput("dateRange", 
+                           label = "Date Range:",
+                           start = "2016/01/20",
+                           end = "2019/09/12",
+                           min = "2016/01/01",
+                           max = "2019/12/30",
+                           format = "yyyy-mm-dd")
         ),
-
+        
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("distPlot")
+            plotOutput("tempPlot")
         )
     )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+    
+    
+    output$tempPlot <- renderPlot({
+        
+        
+        # draw the ggplot line graph of simple data
+        suppressWarnings(ggplot(simpleData)+
+                             geom_line(aes(x = Date, y = AirTemperature_Avg)) +
+                             scale_x_date(limits = c(input$dateRange[1], input$dateRange[2])) +
+                             theme_bw()
+                         
+        )
     })
 }
 
